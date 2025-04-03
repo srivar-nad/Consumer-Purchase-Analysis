@@ -36,11 +36,6 @@ Using statistical techniques like **descriptive analysis, hypothesis testing, AN
 - Regression: Multiple linear regression using R
 
 
-## 📌 Conclusion
-
-> The analysis suggests that **conventional demographic and categorical features** do not significantly explain variations in purchase amount. This opens the door for **more granular or behavioral variables** (e.g., brand loyalty, lifestyle, time of year) to better predict consumer behavior.
-
-
 ## 📚 References
 
 - Moshref Javadi et al., *International Journal of Marketing Studies* (2012)
