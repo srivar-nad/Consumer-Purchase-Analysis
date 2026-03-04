@@ -1,0 +1,132 @@
+---
+title: "Project Report"
+output: html_document
+date: "2023-12-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Descriptive Statistics
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# Read the data from CSV file
+data <- read.csv("shopping_behavior_updated.csv")
+
+
+# Calculate summary statistics for specific columns and transpose
+summary_stats <- data %>%
+  reframe(
+    Min = c(min(Age, na.rm = TRUE), min(Purchase.Amount..USD., na.rm = TRUE), 
+            min(Review.Rating, na.rm = TRUE), min(Previous.Purchases, na.rm = TRUE)),
+    Max = c(max(Age, na.rm = TRUE), max(Purchase.Amount..USD., na.rm = TRUE), 
+            max(Review.Rating, na.rm = TRUE), max(Previous.Purchases, na.rm = TRUE)),
+    Mean = c(mean(Age, na.rm = TRUE), mean(Purchase.Amount..USD., na.rm = TRUE), 
+             mean(Review.Rating, na.rm = TRUE), mean(Previous.Purchases, na.rm = TRUE)),
+    SD = c(sd(Age, na.rm = TRUE), sd(Purchase.Amount..USD., na.rm = TRUE), 
+           sd(Review.Rating, na.rm = TRUE), sd(Previous.Purchases, na.rm = TRUE))
+  ) %>%
+  t() %>%
+  as.data.frame()
+
+# Set row names
+rownames(summary_stats) <- c("Minimum", "Maximum", "Mean", "SD")
+colnames(summary_stats) <- c("Age", "Purchase Amount (USD)", "Review Rating", "Previous Purchases")
+# Print the summary statistics table
+print(summary_stats)
+
+# Visualization examples:
+
+# Histogram for Age Distribution
+ggplot(data, aes(x=Age)) +
+  geom_histogram(binwidth=7, fill="blue", color="black") +
+  ggtitle("Age Distribution of Customers") +
+  xlab("Age") +
+  ylab("Frequency")
+
+# Create histogram for Previous Purchases
+ggplot(data, aes(x=Previous.Purchases)) +
+  geom_histogram(binwidth=6, fill="blue", color="black") +
+  ggtitle("Histogram of Previous Purchases") +
+  xlab("Previous Purchases") +
+  ylab("Frequency")
+
+# Bar plot for Gender Distribution
+ggplot(data, aes(x=Gender)) +
+  geom_bar(fill="cyan", color="black") +
+  ggtitle("Gender Distribution of Customers") +
+  xlab("Gender") +
+  ylab("Count")
+
+# Boxplot for Purchase Amount by Gender
+ggplot(data, aes(x=Gender, y=Purchase.Amount..USD.)) +
+  geom_boxplot(fill="lightgreen", color="black") +
+  ggtitle("Purchase Amount by Gender") +
+  xlab("Gender") +
+  ylab("Purchase Amount (USD)")
+
+```
+
+## Hypothesis Testing
+
+```{r}
+# Create subsets of data based on gender
+male_data <- filter(data, Gender == "Male")$Purchase.Amount..USD.
+female_data <- filter(data, Gender == "Female")$Purchase.Amount..USD.
+
+# F-test to compare variances
+f_test_result <- var.test(male_data, female_data)
+
+# Print the result of the F-test
+print(f_test_result)
+
+# Conduct two-sample t-test
+# If F-test shows no significant difference in variances, use var.equal = TRUE
+t_test_result <- t.test(male_data, female_data, var.equal = (f_test_result$p.value > 0.05))
+
+# Print the result of the t-test
+print(t_test_result)
+
+```
+```{r}
+# Perform ANOVA
+anova_result <- aov(Purchase.Amount..USD. ~ Category, data = data)
+
+# Summary of the ANOVA result
+summary(anova_result)
+
+```
+```{r}
+library(tidyr)
+# Select only the required columns
+selected_data <- data %>%
+  select(Purchase.Amount..USD., Age, Category, Gender, Previous.Purchases, Subscription.Status)
+
+# Create dummy variables for Gender and Subscription Status
+selected_data <- selected_data %>%
+  mutate(Gender = ifelse(Gender == "Female", 1, 0),
+         Subscription.Status = ifelse(Subscription.Status == "Yes", 1, 0))
+
+# Creating dummy variables for Category
+# Using 'Accessories' as the baseline (not included in the dummy variables)
+selected_data$Clothing <- ifelse(selected_data$Category == "Clothing", 1, 0)
+selected_data$Footwear <- ifelse(selected_data$Category == "Footwear", 1, 0)
+selected_data$Outerwear <- ifelse(selected_data$Category == "Outerwear", 1, 0)
+
+# Remove the original 'Category' column
+selected_data$Category <- NULL
+
+# Conduct the regression analysis
+regression_result <- lm(Purchase.Amount..USD. ~ ., data = selected_data)
+
+# Display the regression results
+summary(regression_result)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
